@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Convite – Antes do Caixa</title>
+<meta name="description" content="Você foi convidado para uma lista de compras compartilhada no Antes do Caixa.">
+<meta property="og:title" content="Convite para lista compartilhada">
+<meta property="og:description" content="Toque para entrar na lista no app Antes do Caixa.">
+<style>
+:root{--fundo:#F6F8FA;--cartao:#FFFFFF;--texto:#1B2533;--suave:#5B6878;--verde:#03A04B;--linha:#E2E7ED;--controle:#EEF1F4}
+@media (prefers-color-scheme: dark){:root{--fundo:#0E1726;--cartao:#152034;--texto:#E8EDF3;--suave:#9AA8BC;--verde:#03C35B;--linha:#24324A;--controle:#1E2B42}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--texto);font:16px/1.6 "Segoe UI",Roboto,-apple-system,Helvetica,Arial,sans-serif}
+header{background:#03C35B;color:#0B1A10;padding:28px 16px 24px;text-align:center}
+header h1{margin:0;font-size:26px}
+header p{margin:4px 0 0;opacity:.8;font-size:14px}
+main{max-width:480px;margin:-12px auto 40px;padding:28px 24px;background:var(--cartao);border-radius:14px;border:1px solid var(--linha);text-align:center}
+@media (max-width:520px){main{margin:0;border-radius:0;border-left:0;border-right:0;padding:24px 16px}}
+.rotulo{color:var(--suave);font-size:14px;margin:0 0 6px}
+.codigo{display:inline-block;font-size:30px;font-weight:700;letter-spacing:4px;padding:8px 18px;border:2px solid var(--verde);border-radius:12px;margin:0 0 12px}
+.botao{display:block;width:100%;padding:14px;margin:10px 0 0;border:0;border-radius:10px;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+.principal{background:#03C35B;color:#0B1A10}
+.secundario{background:var(--controle);color:var(--texto)}
+.passos{text-align:left;color:var(--suave);font-size:14px;margin:24px 0 0;padding-left:20px}
+.passos li{margin:4px 0}
+.erro{color:var(--suave)}
+footer{text-align:center;color:var(--suave);font-size:13px;margin:0 0 32px}
+footer a{color:var(--suave)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Antes do Caixa</h1>
+  <p>Convite para lista compartilhada</p>
+</header>
+<main>
+  <div id="convite" hidden>
+    <p>Você foi convidado para fazer as compras junto numa lista do <strong>Antes do Caixa</strong>.</p>
+    <p class="rotulo">Código da lista</p>
+    <div class="codigo" id="codigo"></div>
+    <a class="botao principal" id="abrir" href="#">Abrir no Antes do Caixa</a>
+    <button class="botao secundario" id="copiar" type="button">Copiar código</button>
+    <a class="botao secundario" id="loja" href="https://play.google.com/store/apps/details?id=br.com.onedev.antesdocaixa">Baixar o app</a>
+    <ol class="passos">
+      <li>Ainda não tem o app? Baixe, abra e volte a tocar no link do convite.</li>
+      <li>Se o app não abrir sozinho, toque em <strong>Importar</strong>, escolha <strong>Lista compartilhada</strong> e use o código acima.</li>
+    </ol>
+  </div>
+  <p class="erro" id="invalido" hidden>Este convite não tem um código válido. Peça um novo link a quem compartilhou a lista.</p>
+</main>
+<footer>MikaDEV · <a href="privacidade.html">Política de Privacidade</a></footer>
+<script>
+(function () {
+  var pacote = "br.com.onedev.antesdocaixa";
+  var loja = "https://play.google.com/store/apps/details?id=" + pacote;
+  var bruto = new URLSearchParams(location.search).get("c") || "";
+  var codigo = bruto.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  if (!/^[A-Z0-9]{8}$/.test(codigo)) {
+    document.getElementById("invalido").hidden = false;
+    return;
+  }
+
+  document.getElementById("convite").hidden = false;
+  document.getElementById("codigo").textContent = codigo.slice(0, 4) + "-" + codigo.slice(4);
+
+  // Android: o intent abre o app, ou a Play Store se ele não estiver instalado.
+  // iPhone e outros: o endereço do app (antesdocaixa://), registrado no Info.plist.
+  var android = /android/i.test(navigator.userAgent);
+  document.getElementById("abrir").href = android
+    ? "intent://entrar?c=" + codigo + "#Intent;scheme=antesdocaixa;package=" + pacote +
+      ";S.browser_fallback_url=" + encodeURIComponent(loja) + ";end"
+    : "antesdocaixa://entrar?c=" + codigo;
+
+  // Por enquanto o app só está na Play Store
+  if (!android) document.getElementById("loja").hidden = true;
+
+  var copiar = document.getElementById("copiar");
+  copiar.addEventListener("click", function () {
+    var pronto = function () { copiar.textContent = "Código copiado"; };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(codigo).then(pronto, function () {});
+    } else {
+      var campo = document.createElement("textarea");
+      campo.value = codigo;
+      document.body.appendChild(campo);
+      campo.select();
+      try { document.execCommand("copy"); pronto(); } catch (e) {}
+      document.body.removeChild(campo);
+    }
+  });
+})();
+</script>
+</body>
+</html>
